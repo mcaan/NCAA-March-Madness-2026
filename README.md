@@ -17,6 +17,31 @@ The project is organized as a sequential notebook workflow, from data preparatio
 
 ---
 
+## Results
+
+Historical holdout testing showed similar predictive performance across the modeling approaches. The all-variables logistic regression achieved **77.4% accuracy**, **0.466 log loss**, and **0.858 ROC AUC**. After feature selection and pruning, the reduced logistic model maintained nearly identical performance at **77.2% accuracy**, **0.466 log loss**, and **0.858 ROC AUC**, while using a substantially smaller feature set.
+
+Feature analysis consistently identified **point differential and historical tournament performance** as important predictors of tournament outcomes. The XGBoost workflow selected a compact seven-feature model and produced **76.1% holdout accuracy** with **0.485 log loss**. Despite similar aggregate validation performance, the RFECV/pruned logistic and XGBoost models selected different winners for approximately **8% of the 2026 matchup universe**, motivating a final ensemble that combined their predicted probabilities with a fixed **50/50 weighting**.
+
+### 2026 Tournament Performance
+
+The models were evaluated against the actual 2026 tournament using two different scoring frameworks. Kaggle evaluated matchup probabilities using **Brier score** (lower is better), while CBS Sports scored completed brackets using the traditional **1-2-4-8-16-32** round-based point system.
+
+| Model                   | Kaggle Brier Score | Men's CBS Points | Women's CBS Points |
+| ----------------------- | -----------------: | ---------------: | -----------------: |
+| All-Variables Logistic  |             0.2251 |                — |                  — |
+| RFECV / Pruned Logistic |             0.1530 |           **92** |            **123** |
+| XGBoost                 |             0.1614 |               64 |                 73 |
+| 50/50 Ensemble          |         **0.1483** |               73 |                 89 |
+
+The **ensemble produced the best Kaggle Brier score among the project models**, finishing **1,933rd of 3,462 submissions**; the competition's top score was **0.1097**. In the CBS Sports bracket challenge, the **RFECV/pruned logistic model produced the strongest bracket of the three submitted approaches for both tournaments**, scoring **92 points** in the men's bracket and **123 points** in the women's bracket. The top CBS brackets scored 180 of 192 possible points for the men's tournament and 185 of 192 for the women's tournament.
+
+The difference highlights how the **evaluation objective affects which model performs best**. Brier score evaluates the full predicted probability and penalizes predictions more heavily when a model is confidently wrong. Averaging the RFECV and XGBoost probabilities allowed the ensemble to moderate some of the more extreme predictions made by either model individually, producing the project's strongest probability-based Kaggle score. Traditional bracket scoring, by contrast, rewards whether the selected winner advances and does not distinguish between a 51% and a 95% predicted probability once that probability is converted into a bracket pick. Under that objective, the RFECV model's winner selections produced substantially more points than either XGBoost or the ensemble in both the men's and women's tournaments.
+
+The real-world results also provided a useful contrast with historical validation. Although the all-variables and reduced logistic models performed almost identically on the historical holdout set, their 2026 Kaggle Brier scores diverged substantially (**0.2251 vs. 0.1530**). The all-variables model had previously raised concerns around correlated and redundant predictors and was not used for the CBS bracket submissions. Its weaker out-of-sample tournament performance provides additional practical support for the project's feature-selection and pruning workflow.
+
+---
+
 ## Data Sources
 
 The project uses two primary data sources.
