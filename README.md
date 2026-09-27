@@ -15,6 +15,8 @@ The resulting predictions are formatted for both Kaggle submissions and bracket 
 
 The project is organized as a sequential notebook workflow, from data preparation and exploratory analysis through feature engineering, model development, and ensemble prediction.
 
+The `sql/` directory provides a separate PostgreSQL implementation of the data preparation and matchup feature engineering in Notebooks 01 and 03. It is intended for future modeling work; the notebook workflow and reported model results below remain the original Python project.
+
 ---
 
 ## Results
@@ -158,6 +160,18 @@ A probability threshold of 0.5 is used to determine the predicted winner.
 
 ---
 
+## PostgreSQL Conversion
+
+The nine numbered scripts in [`sql/`](sql/) reproduce and refine the data preparation and matchup construction work from **Notebook 01 (ETL)** and **Notebook 03 (Dyad Merges)**. Start with [`sql/00_import_csv_to_postgresql.ipynb`](sql/00_import_csv_to_postgresql.ipynb), which imports the locally obtained NCAA and conference-ranking CSVs from `data/raw/` into PostgreSQL `public` tables. Set your PostgreSQL connection through the `PGUSER`, `PGPASSWORD`, `PGHOST`, `PGPORT`, and optional `PGDATABASE` environment variables; the notebook requires pandas, SQLAlchemy, and psycopg2. It creates the target database if needed, using an account with database creation permission.
+
+The SQL scripts then create source views in `public`, team-level staging views in `staging`, and feature and matchup views in `analytics`. Run scripts 01–09 in filename order after importing the CSVs; set the session `search_path` to `public` for script 01, `staging, public` for scripts 02–03, and `analytics, staging, public` for scripts 04–09. See [`sql/README.md`](sql/README.md) for the full pipeline instructions.
+
+This SQL pipeline is a foundation for a future modeling iteration. It uses four *prior* seasons for tournament-history features and avoids duplicate games in team-game staging. The existing notebooks, their predictions, and the results reported above have not been regenerated from the SQL views.
+
+The SQL training view includes regular-season games whose full-season features may contain their own outcomes or later games, so those rows require time-aware feature construction before use in a leakage-free evaluation. Its training and prediction filters currently target 2022–2025 and 2026, respectively; update and validate them for subsequent seasons.
+
+---
+
 ## Models
 
 The repository contains prediction files for three modeling approaches:
@@ -252,6 +266,11 @@ NCAA-March-Madness-2026/
 │
 ├── outputs/
 │   └── Local/generated analysis outputs
+│
+├── sql/
+│   ├── 00_import_csv_to_postgresql.ipynb
+│   ├── 01–09 PostgreSQL views for ETL and matchup features
+│   └── README.md
 │
 ├── src/
 │   └── Reusable project code
